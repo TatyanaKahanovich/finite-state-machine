@@ -11,8 +11,7 @@ class FSM {
                 throw new Error();
             }
         } catch(e) {
-        //console.log('caught inner "Error"');
-        throw e;
+            throw e;
         }
     }
 
@@ -34,8 +33,9 @@ class FSM {
 			if (keys.indexOf(state)<0){
 				throw new Error();
 			} else {
-			    this.tmp = this.state;
+			    this.back = this.state;
 			    this.state = state;
+				this.cancel = this.state;
 			    return this.state;
 			}
         } catch(e) {
@@ -55,9 +55,10 @@ class FSM {
 			if (keys.indexOf(event)<0){
 				throw new Error();
 			} else {
-				var tmp = this.config.states[this.state].transitions[event];
-				this.tmp = this.state;
-				this.state = tmp;
+				var back = this.config.states[this.state].transitions[event];
+				this.back = this.state;
+				this.state = back;
+				this.cancel = this.state;
 				return this;
 			}
 		} catch(e) {
@@ -113,9 +114,9 @@ class FSM {
      * @returns {Boolean}
      */
     undo() {
-        if (this.tmp){
-            this.state = this.tmp;
-            this.tmp = false;
+        if (this.back){
+            this.state = this.back;
+            this.back = false;
 			return true;
         } else {
             return false;
@@ -127,12 +128,24 @@ class FSM {
      * Returns false if redo is not available.
      * @returns {Boolean}
      */
-    redo() {}
+    redo() {
+		if (this.cancel){
+            this.state = this.cancel;
+            this.cancel = false;
+			return true;
+        } else {
+            return false;
+        }
+	}
 
     /**
      * Clears transition history
      */
-    clearHistory() {}
+    clearHistory() {
+        this.cancel = false;
+        this.back = false;
+        return this;
+    }
 }
 
 module.exports = FSM;
